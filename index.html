@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MPI IPA Fase E - Mengenal dan Mengelompokkan Makhluk Hidup</title>
+<style>
+*{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;background:#0b2e1f;overflow:hidden}
+#st{position:absolute;left:50%;top:50%;width:1920px;height:1080px;background:#f4fbf4;color:#10281c;overflow:hidden;transform-origin:center}
+#v{position:absolute;inset:0;transition:opacity .28s,transform .28s}#v.o{opacity:0;transform:translateX(-50px)}
+.sc{position:absolute;inset:0;display:flex;flex-direction:column;padding:26px 70px;animation:in .4s}
+@keyframes in{from{opacity:0;transform:translateX(60px)}}
+.top{height:80px;display:flex;align-items:center;gap:26px;font-size:34px;font-weight:700;flex:none}
+.pg{flex:1;height:22px;background:#cfe6d3;border-radius:11px;overflow:hidden}.pg i{display:block;height:100%;background:#1b7a3d;transition:width .4s}
+.bd{flex:1;overflow:hidden;font-size:36px;line-height:1.3;display:flex;flex-direction:column;gap:18px;justify-content:center}
+.ft{height:104px;display:flex;justify-content:space-between;align-items:center;flex:none}
+.b{font-size:36px;font-weight:700;padding:16px 44px;border:0;border-radius:18px;background:#1b7a3d;color:#fff;cursor:pointer;min-width:230px}
+.b.g{background:#e3efe5;color:#10281c;border:3px solid #1b7a3d}.b.sm{min-width:0;padding:8px 24px;font-size:30px}.b:disabled{opacity:.35;cursor:default}
+.cd{background:#fff;border:4px solid #1b7a3d;border-radius:22px;padding:18px 26px;cursor:pointer;font-size:33px}
+.cd.s{background:#ffe9a8;border-color:#b36b00}.cd.ok{background:#c8f0d0}.cd.no{background:#ffd3d0;border-color:#b3261e}
+.rw{display:flex;gap:22px;flex-wrap:wrap}.rw>.cd{flex:1;text-align:center;min-width:200px}.em{font-size:80px;line-height:1.1}
+.fb{background:#fff8dc;border:4px solid #d9a400;border-radius:20px;padding:18px 26px;font-size:32px;min-height:120px}.fb.g{background:#e3f7e7;border-color:#1b7a3d}.fb.r{background:#fde7e5;border-color:#b3261e}
+.gr{display:grid;grid-template-columns:repeat(6,1fr);gap:26px}.gr>.cd{grid-column:span 2;text-align:center}.gr>.cd:nth-child(4){grid-column:2/4}.gr>.cd:nth-child(5){grid-column:4/6}
+.gr b{display:block;font-size:38px}.gr small{font-size:27px}
+input{user-select:text;-webkit-user-select:text}
+#st .bgi{background:url(./assets/latar.png) center/cover no-repeat #cfeccf;padding:20px 70px;row-gap:14px}
+#st .bgi .top{height:76px;background:rgba(255,255,255,.93);border-radius:24px;padding:0 30px;position:relative;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#st .bgi .bd{background:rgba(255,255,255,.92);border-radius:28px;padding:0 20px;box-shadow:0 0 0 10px rgba(255,255,255,.92)}
+#st .bgi .ft{height:92px;position:relative;z-index:1}
+#st .bgi .ft .b{box-shadow:0 4px 12px rgba(0,0,0,.28)}
+#st .bgi .b:disabled{opacity:1;background:#6b7f70;color:#e8efe9;box-shadow:none}
+#mu,#nr,#pz{position:absolute;bottom:16px;z-index:9;font-size:34px;border:0;background:#fffffff2;box-shadow:0 2px 8px rgba(0,0,0,.25);border-radius:50%;width:70px;height:70px;cursor:pointer}#nr{left:calc(50% - 115px)}#mu{left:calc(50% - 35px)}#pz{left:calc(50% + 45px);display:none}
+</style></head><body>
+<div id="st"><div id="v"></div><button id="mu" aria-label="Musik">🔊</button><button id="nr" aria-label="Suara penjelasan">🗣️</button><button id="pz" aria-label="Jeda atau lanjutkan penjelasan">⏸️</button></div>
+<script>
+var $=function(i){return document.getElementById(i)},st=$('st'),v=$('v'),S={n:'',as:null,bl:0,bm:0};
+function fit(){st.style.transform='translate(-50%,-50%) scale('+Math.min(innerWidth/1920,innerHeight/1080)+')'}
+addEventListener('resize',fit);fit();
+var bg=new Audio('./assets/musiklatar.mp3'),ok=new Audio('./assets/benar.mp3'),no=new Audio('./assets/salah.mp3'),on=1,sd=0;bg.loop=true;bg.volume=.15;ok.volume=.6;no.volume=.6;
+function sfx(a){try{a.currentTime=0;a.play().catch(function(){})}catch(e){}}
+var DK={s:0,p:0},LT='',SQ=0,PQ=0,nr=1,SP=null;
+function ds(){if(DK.s||DK.p){sd=0;try{bg.pause()}catch(e){}}else music()}
+function stopSpeech(q){SQ++;PQ++;DK.s=0;DK.p=0;SP=null;try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}upd();if(!q)ds()}
+var IM=/^(sentuh|pilih|urutkan|kelompokkan|tulis|coba|ulangi|pelajari|lihat|tanyakan|bedakan|amati|foto|catat|rancang|bagikan|pindahkan|biarkan|cabut|perhatikan|pikirkan|jelaskan|sebutkan|tentukan|gunakan|jangan|kenali|jaga|tanam|rawat|isi)$/i,AJ=/^(ayo|mari|marilah|yuk|jadilah)$/i;
+function plan(x){var out=[],ss=x.match(/[^.!?]+[.!?]*/g)||[x];
+ss.forEach(function(z){z=z.trim();if(!z)return;var e=z.slice(-1),w=(z.match(/[A-Za-z]+/)||[''])[0],
+ty=e=='?'?'q':AJ.test(w)?'a':IM.test(w)?'c':e=='!'?'a':'i',cl=(z.match(/[^,;:.!?]+[,;:.!?]*/g)||[z]).filter(function(y){return y.trim()});
+cl.forEach(function(c,k){var L=k==cl.length-1,p,r;
+if(ty=='q'){p=L?1.28:1.1;r=L?.93:.97}
+else if(ty=='a'){p=L?1.22:1.12;r=1.02}
+else if(ty=='c'){p=L?.97:1.02;r=.9}
+else{p=L?.9:1.05;r=L?.92:.98}
+out.push({t:c.trim(),p:p,r:r,y:ty})})});return out}
+var SV=null;try{speechSynthesis.getVoices()}catch(e){}
+function gv(){if(SV)return SV;var vs=[],k,a=null,b=null;try{vs=speechSynthesis.getVoices()||[]}catch(e){}
+for(k=0;k<vs.length;k++)if(/^id/i.test(vs[k].lang.replace('_','-'))){if(vs[k].localService){a=vs[k];break}if(!b)b=vs[k]}
+SV=a||b;return SV}
+function upd(){var b=$('pz');b.style.display=SP?'block':'none';b.textContent=SP&&SP.z?'▶️':'⏸️'}
+function say(t){if(!nr||!window.speechSynthesis||!t)return 0;var x=String(t).replace(/<[^>]*>/g,' ').replace(/&amp;|&/g,' dan ').replace(/\//g,' atau ').replace(/[^A-Za-z0-9\s.,;:!?()\-\/']/g,' ').replace(/\s+/g,' ').trim();if(!x)return 0;
+try{speechSynthesis.cancel();PQ++;SP={a:plan(x),i:0,z:0,v:gv()};DK.p=1;ds();upd();sn();return 1}catch(e){SP=null;DK.p=0;upd();ds();return 0}}
+function sn(){var p=SP,q=PQ;if(!p)return;
+if(p.i>=p.a.length){SP=null;DK.p=0;upd();ds();return}
+if(p.z)return;
+var c=p.a[p.i],u=new SpeechSynthesisUtterance(c.t);u.lang='id-ID';u.rate=c.r;u.pitch=c.p;u.volume=1;
+if(p.v)u.voice=p.v;
+u.onend=function(){if(q==PQ&&SP==p){p.i++;if(p.z&&p.i<p.a.length)p.w=1;else sn()}};
+u.onerror=function(){if(q==PQ&&SP==p){SP=null;DK.p=0;upd();ds()}};
+try{speechSynthesis.speak(u)}catch(e){SP=null;DK.p=0;upd();ds()}}
+function tp(){var p=SP;if(!p)return;if(p.z){p.z=0;if(p.w){p.w=0;sn()}}else p.z=1;upd()}
+function sfxSay(a,t){stopSpeech(1);var tk=SQ,d=0;LT=t;DK.s=1;ds();sfx(a);
+var f=function(){if(d||tk!=SQ)return;d=1;DK.s=0;if(!say(t))ds()};a.onended=f;a.onerror=f;setTimeout(f,2500)}
+function rep(){stopSpeech(1);if(!say(LT))ds()}
+function rb(){return'<div style="margin-top:10px"><button class="b g sm" onclick="rep()">🔊 Dengarkan lagi</button></div>'}
+$('pz').onclick=tp;
+$('nr').onclick=function(){nr=!nr;this.textContent=nr?'🗣️':'🤫';if(!nr)stopSpeech()};
+function music(){if(on&&!sd&&!(DK.s||DK.p)){sd=1;try{bg.play().catch(function(e){if(!e||e.name!='AbortError')sd=0})}catch(e){}}}
+document.addEventListener('pointerdown',music);
+$('mu').onclick=function(){on=!on;this.textContent=on?'🔊':'🔇';if(on){sd=0;music()}else bg.pause()};
+var mem=[];function ld(){try{return JSON.parse(localStorage.getItem('mpiIPA1')||'[]')}catch(e){return mem}}
+function sv(a){mem=a;try{localStorage.setItem('mpiIPA1',JSON.stringify(a))}catch(e){}}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function go(f){stopSpeech();v.className='o';setTimeout(function(){v.innerHTML=f();v.className=''},280)}
+function pr(p){$('pb').style.width=p+'%';$('pt').textContent=Math.round(p)+'%'}
+function L(t,p,bd,bk,nx,nd,nl){return'<div class="sc bgi"><div class="top"><span>'+t+'</span><div class="pg"><i id="pb" style="width:'+p+'%"></i></div><span id="pt">'+Math.round(p)+'%</span><button class="b g sm" onclick="menu()">🏠 Menu</button></div><div class="bd" id="bd">'+bd+'</div><div class="ft"><button class="b g" onclick="'+bk+'">← Kembali</button>'+(nx?'<button class="b" id="nx" onclick="'+nx+'"'+(nd?' disabled':'')+'>'+(nl||'Lanjut →')+'</button>':'<span></span>')+'</div></div>'}
+/* Cover & nama */
+function cover(){return'<div class="sc" style="padding:0;background:linear-gradient(#1b7a3d,#0b2e1f);cursor:pointer" onclick="go(nama)"><img src="./assets/cover.png" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"><div style="position:absolute;bottom:112px;width:100%;text-align:center"><span style="font-size:26px;color:#fff;background:#000a;padding:6px 22px;border-radius:20px">sentuh mana saja untuk masuk</span></div></div>'}
+function nama(){return'<div class="sc" style="justify-content:center;align-items:center;gap:26px;background:linear-gradient(#d9f2dc,#f4fbf4)"><div style="font-size:100px">🌿</div><div style="font-size:54px;font-weight:700">Siapa namamu?</div><div style="font-size:32px">Namamu dipakai untuk papan peringkat di perangkat ini.</div><input id="ni" maxlength="20" placeholder="Tulis namamu" value="'+esc(S.n)+'" onkeydown="if(event.key==\'Enter\')nk()" style="font-size:44px;padding:16px 28px;border:4px solid #1b7a3d;border-radius:18px;width:780px;text-align:center"><div id="er" style="color:#b3261e;font-size:30px;height:40px"></div><div style="display:flex;gap:30px"><button class="b g" onclick="go(cover)">← Kembali</button><button class="b" onclick="nk()">Masuk →</button></div></div>'}
+function nk(){var n=$('ni').value.trim();if(!n){$('er').textContent='Isi namamu dulu ya.';return}S.n=n;menu()}
+/* Menu */
+function menu(){go(function(){var d=(S.as!=null?1:0)+S.bl+S.bm,r=S.as==null?'Saran: mulai dari Asesmen Awal untuk mengetahui pemahaman awalmu.':S.as>=3?'Pemahaman awalmu sudah baik. Perdalam di Belajar, lalu uji di Bermain.':'Pemahaman awalmu masih perlu dikuatkan. Pelajari materi di Belajar dengan teliti.',
+m=[['📝','Asesmen Awal','Kuis pemantik pemahaman awal',0],['📖','Belajar','Materi dan eksplorasi konsep',1],['🎯','Bermain','Latihan soal dan penilaian',2],['🏆','Papan Peringkat','Peringkat di perangkat ini',3],['👤','Pengembang','Profil pengembang',4]],h='<div style="text-align:center;font-size:42px;font-weight:700">Halo, '+esc(S.n)+'! 👋</div><div class="fb g" style="min-height:0;text-align:center">'+r+'</div><div class="gr">';
+m.forEach(function(x,k){var dn=(k==0&&S.as!=null)||(k==1&&S.bl)||(k==2&&S.bm);h+='<div class="cd'+(dn?' ok':'')+'" onclick="mn('+x[3]+')"><div class="em">'+x[0]+'</div><b>'+x[1]+(dn?' ✓':'')+'</b><small>'+x[2]+'</small></div>'});
+return L('Menu Utama',d/3*100,h+'</div>','go(nama)','')})}
+function mn(k){if(k==0)qs(0);else if(k==1){B={i:0,x:{}};bg2()}else if(k==2)qs(1);else if(k==3)pap();else dev()}
+/* Kuis (asesmen & bermain) */
+var QA=[
+{q:'Di toko kelontong, sayur, sabun, dan bumbu diletakkan di rak berbeda. Apa tujuan utama pengelompokan itu?',o:['Supaya rak tampak penuh','Supaya barang mudah ditemukan, dimanfaatkan, dan dirawat','Supaya semua barang berharga sama'],c:[1],e:'Pengelompokan adalah alat bantu agar benda mudah dikenali dan dimanfaatkan. Prinsip yang sama berlaku untuk tumbuhan dan hewan.'},
+{q:'Jahe, kunyit, dan kencur dikelompokkan sebagai tanaman obat keluarga (TOGA). Apa dasar pengelompokannya?',o:['Manfaat atau fungsi','Tempat hidup (habitat)','Warna bunga'],c:[0],e:'Ketiganya dikelompokkan berdasarkan manfaat: dipakai sebagai bahan obat alami, misalnya saat batuk atau masuk angin.'},
+{q:'Eceng gondok dan pohon pisang dibedakan berdasarkan ...',o:['Harga di pasar','Tempat hidup (habitat): air dan darat','Jumlah daunnya saja'],c:[1],e:'Eceng gondok hidup di air, pohon pisang hidup di darat. Itu pengelompokan berdasarkan habitat.'},
+{q:'Manakah yang tepat dikelompokkan sebagai hewan pembawa penyakit atau hama?',o:['Ayam','Kambing','Tikus'],c:[2],e:'Tikus (juga lalat dan nyamuk) membawa penyakit, sedangkan ayam dan kambing adalah hewan ternak yang dipelihara.'}],
+QB=[
+{q:'Pilih 2 alasan manusia mengelompokkan makhluk hidup.',o:['Agar manfaat dan bahayanya mudah dikenali','Agar semua jenis menjadi sama','Agar mudah dimanfaatkan dan dirawat','Agar tidak perlu diamati'],c:[0,2],e:'Pengelompokan membantu mengenali manfaat atau bahaya, serta memudahkan pemanfaatan dan perawatan makhluk hidup.'},
+{q:'Pilih 2 dasar praktis pengelompokan tumbuhan dan hewan.',o:['Manfaat atau fungsi','Warna kesukaan pengamat','Tempat hidup (habitat)','Harga di pasar'],c:[0,2],e:'Dasar praktisnya: manfaat atau fungsi, ciri fisik, dan habitat. Warna kesukaan dan harga bukan ciri makhluk hidup.'},
+{q:'Pilih 2 pasangan yang tepat.',o:['Jahe - tanaman obat','Anggrek - tanaman pangan','Eceng gondok - tumbuhan air','Kambing - hewan air'],c:[0,2],e:'Jahe masuk TOGA dan eceng gondok hidup di air. Anggrek adalah tanaman hias, kambing hewan darat.'},
+{q:'Pilih 2 hewan yang termasuk pembawa penyakit atau hama.',o:['Tikus','Ayam','Lalat','Kambing'],c:[0,2],e:'Tikus dan lalat membawa kuman. Ayam dan kambing adalah hewan ternak.'},
+{q:'Pilih 2 langkah tepat saat mendokumentasikan flora atau fauna lokal.',o:['Foto jelas dan catat lokasinya','Petik tanaman langka agar fotonya lengkap','Tulis alasan pengelompokannya','Unggah tanpa keterangan apa pun'],c:[0,2],e:'Dokumentasi yang baik jelas, bernama, berlokasi, dan beralasan. Memetik tanaman langka merusak pelestarian.'},
+{q:'Pilih 2 aksi pelestarian flora atau fauna lokal yang tepat.',o:['Menanam dan merawat TOGA','Membuang sampah ke sungai','Menangkap burung liar untuk dipelihara','Membagikan ajakan peduli lingkungan di grup belajar'],c:[0,3],e:'Menanam, merawat, dan mengajak orang lain adalah aksi nyata sebagai wujud syukur atas ciptaan Tuhan.'},
+{q:'Pilih 2 tanaman yang termasuk tanaman hias.',o:['Miana','Sirih','Mawar','Bayam'],c:[0,2],e:'Miana dan mawar ditanam untuk memperindah. Sirih termasuk tanaman obat (TOGA) dan bayam adalah pangan.'},
+{q:'Pilih 2 pernyataan yang tepat tentang pengelompokan menurut bentuk fisik.',o:['Pohon nangka berbatang berkayu, bayam berbatang lunak','Unggas berambut dan menyusui','Hewan ternak berbulu dan berparuh','Unggas berbulu dan berparuh'],c:[0,3],e:'Nangka berkayu dan bayam lunak. Unggas berbulu dan berparuh, sedangkan hewan ternak berambut dan menyusui.'}],
+Z={m:0,i:0,a:[]};
+function Q(){return Z.m?QB:QA}
+function qs(m){Z={m:m,i:0,a:[]};qg(0)}
+function qg(i){Z.i=i;go(qv)}
+function qv(){var a=Z.a[Z.i]=Z.a[Z.i]||{s:[],d:0};return L(Z.m?'Bermain':'Asesmen Awal',(Z.i+(a.d?1:0))/Q().length*100,qb(),'qbk()','qn()',!a.d)}
+function qb(){var q=Q()[Z.i],a=Z.a[Z.i],h='<div style="font-size:30px">'+(Z.m?'Soal ':'Pertanyaan ')+(Z.i+1)+' dari '+Q().length+(Z.m?' · Pilih 2 jawaban benar':'')+'</div><div style="font-weight:700;font-size:40px">'+q.q+'</div>';
+q.o.forEach(function(t,k){var c='cd',s=a.s.indexOf(k)>-1;if(a.d){if(q.c.indexOf(k)>-1)c+=' ok';else if(s)c+=' no'}else if(s)c+=' s';h+='<div class="'+c+'" onclick="qp('+k+')">'+String.fromCharCode(65+k)+'. '+t+'</div>'});
+if(Z.m&&!a.d)h+='<div><button class="b" '+(a.s.length==2?'':'disabled')+' onclick="qc()">Periksa Jawaban</button></div>';
+if(a.d)LT=(a.r?'Tepat!':a.p?'Baru sebagian benar.':'Belum tepat.')+' '+q.e;
+if(a.d)h+='<div class="fb '+(a.r?'g':'r')+'"><b>'+(a.r?'✅ Tepat!':a.p?'⚠️ Baru sebagian benar.':'❌ Belum tepat.')+'</b> '+q.e+rb()+'</div>';return h}
+function qp(k){var a=Z.a[Z.i];if(a.d)return;if(!Z.m){a.s=[k];qc();return}var j=a.s.indexOf(k);if(j>-1)a.s.splice(j,1);else if(a.s.length<2)a.s.push(k);qu()}
+function qc(){var q=Q()[Z.i],a=Z.a[Z.i];a.d=1;a.p=a.s.filter(function(x){return q.c.indexOf(x)>-1}).length;a.r=a.p==q.c.length&&a.s.length==q.c.length;sfxSay(a.r?ok:no,(a.r?'Tepat!':a.p?'Baru sebagian benar.':'Belum tepat.')+' '+q.e);qu()}
+function qu(){var a=Z.a[Z.i];$('bd').innerHTML=qb();$('nx').disabled=!a.d;pr((Z.i+(a.d?1:0))/Q().length*100)}
+function qbk(){Z.i>0?qg(Z.i-1):menu()}
+function qn(){Z.i<Q().length-1?qg(Z.i+1):qf()}
+function qf(){var n=Q().length,k=n-1,sc,h,rc;
+if(!Z.m){sc=Z.a.reduce(function(t,a){return t+(a.r?1:0)},0);S.as=sc;var m1=(sc>2?'Pemahaman awalmu sudah baik. Lanjutkan ke Belajar untuk mendalami cara mengelompokkan dan aksi pelestarian.':sc>1?'Kamu sudah punya dasar yang cukup. Belajar akan membantu merapikan pemahamanmu.':'Tidak apa-apa, ini baru permulaan. Belajar akan menuntunmu langkah demi langkah.');LT='Skor awalmu '+sc+' dari '+n+'. '+m1;go(function(){return L('Asesmen Awal',100,'<div class="em" style="text-align:center;font-size:110px">'+(sc>2?'🌟':'🌱')+'</div><div style="text-align:center;font-size:48px;font-weight:700">Skor awalmu: '+sc+' dari '+n+'</div><div class="fb g">'+m1+rb()+'</div>','qg('+k+')','menu()',0,'Ke Menu →')});setTimeout(function(){say(LT)},450);return}
+var p=Z.a.reduce(function(t,a){return t+(a.p||0)},0);sc=Math.round(p/(QB.length*2)*100);var ps=sc>=70;if(ps)S.bm=1;var l=ld(),f=l.filter(function(x){return x.n.toLowerCase()==S.n.toLowerCase()})[0];
+if(!f)l.push({n:S.n,s:sc,d:new Date().toLocaleDateString('id-ID')});else if(sc>f.s){f.s=sc;f.d=new Date().toLocaleDateString('id-ID')}
+sv(l);l.sort(function(a,b){return b.s-a.s});rc=l.map(function(x){return x.n.toLowerCase()}).indexOf(S.n.toLowerCase())+1;
+var ct=sc>=90?'Sangat Baik':ps?'Baik':'Perlu Mengulang',m2=sc>=90?'Hebat! Kamu menguasai prinsip pengelompokan dan pelestarian flora-fauna lokal.':ps?'Bagus! Kamu sudah mencapai batas ketuntasan 70. Ulangi lagi bila ingin skor yang lebih tinggi.':'Skormu belum mencapai 70, jadi permainan harus diulangi. Pelajari kembali materinya di menu Belajar, lalu coba lagi.';
+LT='Skormu '+sc+' dari 100. Kategori: '+ct+'. '+m2+(ps?' Peringkat terbaikmu di perangkat ini, ke '+rc+'.':'');
+go(function(){return L('Bermain',100,'<div class="em" style="text-align:center;font-size:110px">'+(sc>=90?'🏅':ps?'🌟':'🌱')+'</div><div style="text-align:center;font-size:52px;font-weight:700">Skormu: '+sc+' / 100</div><div style="text-align:center;font-size:42px;font-weight:700;color:'+(ps?'#1b7a3d':'#b3261e')+'">Kategori: '+ct+(ps?' ✓':' ✗')+'</div>'+(ps?'<div style="text-align:center;font-size:36px">Peringkat terbaikmu di perangkat ini: ke-'+rc+'</div>':'')+'<div class="fb '+(ps?'g':'r')+'">'+m2+rb()+'</div>','qg('+k+')',ps?'pap()':'qs(1)',0,ps?'Papan Peringkat →':'🔄 Ulangi Permainan')});setTimeout(function(){say(LT)},450)}
+
+/* Belajar */
+var B,EX={0:['Ada jutaan jenis tumbuhan dan hewan. Mana yang aman dikonsumsi? Mana yang berkhasiat obat? Mana yang berisiko bahaya? Solusinya: pengelompokan, seperti merapikan barang menurut jenis dan fungsinya. Sentuh tiap contoh:',[['🛒','Toko / Supermarket','Barang tidak ditumpuk acak: sayur di rak pendingin, sabun di bagian pembersih, bumbu di area bumbu. Pembeli cepat menemukan kebutuhan.'],['🍳','Dapur Rumah & Pesantren','Jahe, kunyit, dan lengkuas disimpan bersama sebagai bumbu rimpang; piring dan gelas di rak terpisah.'],['🔧','Bengkel / Pabrik','Baut, mur, dan perkakas dipisah menurut ukuran dan fungsi. Begitu pula flora-fauna: dikelompokkan agar mudah dikenali, dimanfaatkan, dan dirawat.']]],
+1:['Ada 3 dasar praktis mengelompokkan tumbuhan dan hewan. Sentuh tiap dasar:',[['💊','Manfaat & Fungsi','Tanyakan: untuk dimakan, obat, atau hiasan? Pangan: padi, singkong, bayam. Obat (TOGA): jahe, kunyit, sirih. Hias: anggrek, mawar.'],['🔍','Bentuk Fisik','Lihat batang, daun, penutup tubuh, alat gerak. Batang berkayu (nangka) vs lunak (bayam); unggas (berbulu, berparuh) vs ternak (berambut, menyusui).'],['🌊','Tempat Hidup (Habitat)','Di mana hidup utamanya? Tumbuhan darat (pisang) vs air (eceng gondok); hewan darat (kambing) vs air (ikan lele).']]],
+3:['Pengelompokan langsung berguna dalam kegiatan sehari-hari. Sentuh tiap penerapan:',[['🕌','Pesantren & Pemukiman','Memisahkan tanaman obat (jahe, kencur, temulawak) dari tanaman hias memudahkan pertolongan pertama saat batuk atau masuk angin.'],['🥬','Kerja Kuliner & Pertanian','Sayuran daun cepat layu, umbi-umbian tahan lama. Mengenali ciri fisik membantu mengatur stok agar tidak cepat busuk dan terbuang.'],['🪰','Kebersihan & Sanitasi','Bedakan hewan ternak (ayam, kambing) dari hewan pembawa penyakit atau hama (tikus, lalat, nyamuk) agar kebersihan dijaga tepat sasaran.']]],
+8:['Ayo berpikir dan berdiskusi! Sentuh tiap pertanyaan untuk melihat contoh jawaban:',[['🌱','Tiga tumbuhan di sekitarmu','Contoh: bayam (pangan), sirih (obat/TOGA), mawar (hias). Tulis contoh milikmu sendiri, lalu tentukan kelompoknya menurut manfaat.'],['🧺','Apa yang sudah kamu pilah?','Contoh: bumbu rimpang dipisah dari piring di dapur, baut dipisah dari mur di bengkel. Manfaatnya: barang cepat ditemukan dan kerja lebih efisien.'],['🐔','Ternak atau pembawa penyakit?','Ternak (ayam, kambing) dipelihara karena bermanfaat. Pembawa penyakit atau hama (tikus, lalat, nyamuk) merugikan kesehatan dan perlu dikendalikan.']]]},
+SI=[['🌾','Padi',0,'Padi menghasilkan beras untuk dimakan, jadi masuk kelompok pangan.'],['🥔','Singkong',0,'Umbi singkong diolah menjadi makanan, jadi termasuk pangan.'],['🌿','Jahe',1,'Jahe dipakai sebagai bahan obat keluarga (TOGA).'],['🟠','Kunyit',1,'Kunyit berkhasiat obat dan termasuk TOGA.'],['🌸','Anggrek',2,'Anggrek ditanam untuk keindahannya, jadi tanaman hias.'],['🌹','Mawar',2,'Mawar dipelihara sebagai hiasan, jadi tanaman hias.'],['🥬','Bayam',0,'Bayam adalah sayuran yang dimakan, jadi termasuk pangan.'],['🍃','Sirih',1,'Sirih dimanfaatkan sebagai bahan obat tradisional (TOGA).'],['🪴','Miana',2,'Miana ditanam sebagai tanaman hias karena daunnya indah.']],
+SC=['🍚 Pangan','💊 Obat (TOGA)','🌺 Hias'],
+CS=[['Pindahkan jahe, kencur, dan temulawak ke satu petak TOGA berlabel, terpisah dari tanaman hias.',1,'Tepat! Pengelompokan menurut manfaat membuat bahan obat cepat ditemukan saat pertolongan pertama.'],['Cabut semua tanaman yang tidak dikenal agar halaman rapi.',0,'Kurang tepat. Mencabut tanpa mengenali merusak keanekaragaman. Kenali dan kelompokkan dulu, itu bagian dari melestarikan ciptaan Tuhan.'],['Biarkan tercampur karena semua tanaman sama saja.',0,'Kurang tepat. Fungsi tiap tanaman berbeda, sehingga sulit dimanfaatkan jika tercampur. Pengelompokan memecahkan masalah itu.']],
+OR=[['Amati dan pilih flora atau fauna bermanfaat di sekitarmu.','Dokumentasi selalu dimulai dari mengenali objek yang akan dicatat.'],['Foto atau rekam dengan jelas, catat nama dan lokasinya.','Setelah objek dipilih, datanya dikumpulkan dulu.'],['Kelompokkan menurut manfaat, ciri fisik, atau habitat, lalu tulis alasannya.','Pengelompokan dilakukan setelah ada data pengamatan.'],['Rancang 1 aksi pelestarian sederhana, misalnya menanam dan merawat TOGA.','Aksi dirancang setelah kamu mengenal kelompok flora-fauna di sekitarmu.'],['Bagikan dokumentasi dan kalimat ajakan di grup belajar atau media sosial.','Langkah terakhir: mengajak orang lain peduli.']],OP=[3,0,4,2,1];
+function rd(i){var s=B.x[i];if(i==2)return s&&s.p.length==SI.length;if(i==4)return s&&s.ok;if(i==5)return s&&s.n==5;if(i==6||i==7)return 1;return s&&s.v.length==3}
+var P=[7,0,1,2,3,4,5,8,6];function bg2(){go(function(){return L('Belajar',(B.i+1)/9*100,sb(),'bk()','bn()',!rd(P[B.i]),B.i==8?'Selesai ✓':'Lanjut →')})}
+function bu(){$('bd').innerHTML=sb();$('nx').disabled=!rd(P[B.i])}
+function bk(){B.i>0?(B.i--,bg2()):menu()}
+function bn(){if(B.i<8){B.i++;bg2()}else{S.bl=1;menu()}}
+function sb(){var i=P[B.i],s=B.x[i],h,e;
+if(i==7)LT='Pertanyaan pemantik. Pernahkah Anda kesulitan mencari barang karena tempatnya berantakan? Lalu, bagaimana jika jutaan jenis tumbuhan dan hewan tidak dikelompokkan? Setelah belajar, Anda mampu: satu, menjelaskan alasan makhluk hidup perlu dikelompokkan. Dua, mengelompokkan tumbuhan dan hewan menurut manfaat, ciri luar, dan tempat hidup. Tiga, menerapkan pengelompokan di rumah, pesantren, dan tempat kerja.';
+if(i==7)return'<div class="cd" style="cursor:default;text-align:center"><div dir="rtl" style="font-size:54px;line-height:1.5">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div><div style="font-size:28px">Dengan menyebut nama Allah Yang Maha Pengasih lagi Maha Penyayang.</div></div><div class="fb g"><b>❓ Pertanyaan pemantik:</b> Pernahkah Anda kesulitan mencari barang karena tempatnya berantakan? Lalu, bagaimana jika jutaan jenis tumbuhan dan hewan tidak dikelompokkan?</div><div style="font-weight:700">🎯 Setelah belajar, Anda mampu:</div><div class="rw"><div class="cd" style="cursor:default">1. Menjelaskan alasan makhluk hidup perlu dikelompokkan.</div><div class="cd" style="cursor:default">2. Mengelompokkan tumbuhan dan hewan menurut manfaat, ciri luar, dan tempat hidup.</div><div class="cd" style="cursor:default">3. Menerapkan pengelompokan di rumah, pesantren, dan tempat kerja.</div></div>'+rb();
+if(i==0||i==1||i==3||i==8){s=B.x[i]=s||{v:[],c:-1};e=EX[i];if(s.c>-1)LT=e[1][s.c][1]+'. '+e[1][s.c][2];h='<div>'+e[0]+'</div><div class="rw">';e[1].forEach(function(t,k){h+='<div class="cd'+(s.c==k?' s':s.v.indexOf(k)>-1?' ok':'')+'" onclick="ec('+k+')"><div class="em">'+t[0]+'</div><b>'+t[1]+'</b></div>'});
+return h+'</div><div class="fb'+(s.c>-1?' g':'')+'">'+(s.c>-1?e[1][s.c][2]+rb():'👆 Sentuh setiap kartu untuk membuka penjelasan ('+s.v.length+'/3)')+'</div>'}
+if(i==2){s=B.x[2]=s||{p:[],c:-1,f:'Sentuh satu tumbuhan, lalu sentuh kelompok manfaatnya.',g:0};h='<div>Kelompokkan tumbuhan berikut menurut <b>manfaatnya</b>:</div><div class="rw" style="min-height:130px">';
+SI.forEach(function(t,k){if(s.p.indexOf(k)<0)h+='<div class="cd'+(s.c==k?' s':'')+'" style="min-width:150px;padding:10px 8px" onclick="so('+k+')"><span style="font-size:50px">'+t[0]+'</span><br>'+t[1]+'</div>'});h+='</div><div class="rw">';
+SC.forEach(function(t,c){h+='<div class="cd" onclick="sk('+c+')" style="background:#eef7ef"><b>'+t+'</b><br>'+s.p.filter(function(k){return SI[k][2]==c}).map(function(k){return SI[k][0]+' '+SI[k][1]}).join(', ')+'&nbsp;</div>'});
+LT=s.f;return h+'</div><div class="fb '+(s.g?'g':s.g===0?'':'r')+'">'+s.f+(s.g!==0?rb():'')+'</div>'}
+if(i==4){s=B.x[4]=s||{ok:0,f:'',k:-1};LT=s.f;h='<div style="font-weight:700">Studi kasus: di halaman pesantren, jahe, kencur, dan temulawak tercampur dengan anggrek dan mawar. Saat seorang santri batuk dan masuk angin, bahan obat sulit ditemukan. Apa yang paling tepat dilakukan?</div>';
+CS.forEach(function(t,k){h+='<div class="cd'+(s.k==k?(t[1]?' ok':' no'):'')+'" onclick="cc('+k+')">'+String.fromCharCode(65+k)+'. '+t[0]+'</div>'});return h+(s.f?'<div class="fb '+(s.ok?'g':'r')+'">'+s.f+(s.ok?'':' <b>Coba pilihan lain.</b>')+rb()+'</div>':'')}
+if(i==5){s=B.x[5]=s||{n:0,f:'Sentuh langkah sesuai urutan yang benar, dari langkah 1.'};h='<div>Urutkan langkah <b>mendokumentasikan flora/fauna dan aksi pelestarian</b>:</div>';
+OP.forEach(function(k){var d=k<s.n;h+='<div class="cd'+(d?' ok':'')+'" onclick="oc('+k+')">'+(d?'✅ '+(k+1)+'. ':'')+OR[k][0]+'</div>'});LT=s.f;return h+'<div class="fb">'+s.f+(/^[✅❌]/.test(s.f)?rb():'')+'</div>'}
+LT='Ringkasan kunci. Pengelompokan adalah alat bantu untuk mengenali sifat, fungsi, dan pemanfaatan flora dan fauna secara praktis. Dasar pengelompokan: manfaat atau fungsi, ciri fisik, dan tempat hidup atau habitat. Kesadaran pelestarian: mengenali keanekaragaman di sekitar adalah langkah awal menjaga kesehatan lingkungan dan melestarikan ciptaan Tuhan, lewat dokumentasi digital dan aksi nyata. Pesan karakter mulia: mengenali dan menjaga tumbuhan serta hewan adalah wujud syukur atas ciptaan Tuhan. Jadilah warga belajar yang berkarakter mulia, peduli lingkungan, dan siap berkarya! Terima kasih, semoga ilmu hari ini bermanfaat dan berkah.';
+return'<div style="font-weight:700;font-size:42px">Ringkasan Kunci</div><div class="cd" style="cursor:default">✔ Pengelompokan adalah alat bantu untuk mengenali sifat, fungsi, dan pemanfaatan flora-fauna secara praktis.</div><div class="cd" style="cursor:default">✔ Dasar pengelompokan: manfaat atau fungsi, ciri fisik, dan tempat hidup (habitat).</div><div class="cd" style="cursor:default">✔ Kesadaran pelestarian: mengenali keanekaragaman di sekitar adalah langkah awal menjaga kesehatan lingkungan dan melestarikan ciptaan Tuhan, lewat dokumentasi digital dan aksi nyata.</div><div class="fb g">🌿 <b>Pesan Karakter Mulia:</b> Mengenali dan menjaga tumbuhan serta hewan adalah wujud syukur atas ciptaan Tuhan. Jadilah warga belajar yang berkarakter mulia, peduli lingkungan, dan siap berkarya!<br><span dir="rtl" style="font-size:36px">اَلْحَمْدُ لِلّٰهِ رَبِّ الْعَالَمِينَ</span> Segala puji bagi Allah. Terima kasih, semoga ilmu hari ini bermanfaat dan berkah.</div>'+rb()}
+function ec(k){var s=B.x[P[B.i]];s.c=k;if(s.v.indexOf(k)<0)s.v.push(k);bu();say(LT)}
+function so(k){var s=B.x[2];s.c=k;bu()}
+function sk(c){var s=B.x[2];if(s.c<0){s.f='Pilih dulu tumbuhannya.';s.g=0;bu();return}var t=SI[s.c];if(t[2]==c){s.p.push(s.c);s.g=1;s.f='✅ '+t[3];sfxSay(ok,'Tepat! '+t[3])}else{s.g=-1;s.f='❌ Belum tepat. '+t[3];sfxSay(no,'Belum tepat. '+t[3])}s.c=-1;bu()}
+function cc(k){var s=B.x[4],t=CS[k];s.k=k;s.ok=t[1];s.f=(t[1]?'✅ ':'❌ ')+t[2];sfxSay(t[1]?ok:no,t[2]);bu()}
+function oc(k){var s=B.x[5];if(k<s.n)return;if(k==s.n){s.f='✅ '+OR[k][1];s.n++;sfxSay(ok,'Tepat! '+OR[k][1])}else{s.f='❌ Belum tepat. Sekarang langkah ke-'+(s.n+1)+': '+OR[s.n][0]+' '+OR[s.n][1];sfxSay(no,s.f)}bu()}
+/* Papan peringkat & pengembang */
+function pap(){go(function(){var l=ld().sort(function(a,b){return b.s-a.s}).slice(0,8),h='<div style="font-weight:700;font-size:44px;text-align:center">🏆 Papan Peringkat (disimpan di perangkat ini)</div>';
+if(!l.length)h+='<div class="fb" style="text-align:center">Belum ada skor. Mainkan menu Bermain untuk tampil di sini.</div>';
+l.forEach(function(x,k){h+='<div class="cd'+(x.n.toLowerCase()==S.n.toLowerCase()?' s':'')+'" style="cursor:default;display:flex;gap:24px;padding:10px 26px"><b style="width:80px">'+(k<3?['🥇','🥈','🥉'][k]:k+1)+'</b><span style="flex:1">'+esc(x.n)+'</span><span style="font-size:28px">'+x.d+'</span><b>'+x.s+'</b></div>'});
+return L('Papan Peringkat',100,h,'menu()','')})}
+function dev(){go(function(){return L('Pengembang',100,'<div style="text-align:center"><img data-n="0" src="./assets/pengembang.jpg" alt="Pengembang" style="width:380px;height:380px;object-fit:cover;border-radius:50%;border:8px solid #1b7a3d" onerror="var n=this.dataset.n|0,x=[\'.jpg\',\'.jpeg\',\'.png\'];if(n<2){this.dataset.n=n+1;this.src=\'./assets/pengembang\'+x[n+1]}else this.outerHTML=\'<div style=font-size:200px>👤</div>\'"></div><div style="text-align:center;font-size:54px;font-weight:700">Ade Suminarsih, S.Pd.</div><div style="text-align:center;font-size:38px">PKBM Amanah Kita</div><div style="text-align:center;font-size:30px">MPI IPA Fase E (Paket C) · TP 1</div>','menu()','')})}
+v.innerHTML=cover();
+</script></body></html>
