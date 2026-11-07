@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#0b2e1f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="color-scheme" content="light">
 <title>MPI IPA Fase E - Mengenal dan Mengelompokkan Makhluk Hidup</title>
 <style>
 *{box-sizing:border-box;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{height:100%;background:#0b2e1f;overflow:hidden}
+html,body{height:100%;width:100%;background:#0b2e1f;overflow:hidden;overscroll-behavior:none;touch-action:manipulation}body{position:fixed;inset:0;-webkit-touch-callout:none;-webkit-text-size-adjust:100%}
 #st{position:absolute;left:50%;top:50%;width:1920px;height:1080px;background:#f4fbf4;color:#10281c;overflow:hidden;transform-origin:center}
 #v{position:absolute;inset:0;transition:opacity .28s,transform .28s}#v.o{opacity:0;transform:translateX(-50px)}
 .sc{position:absolute;inset:0;display:flex;flex-direction:column;padding:26px 70px;animation:in .4s}
@@ -22,6 +22,8 @@ html,body{height:100%;background:#0b2e1f;overflow:hidden}
 .gr b{display:block;font-size:38px}.gr small{font-size:27px}
 input{user-select:text;-webkit-user-select:text}
 #st .bgi{background:url(./assets/latar.png) center/cover no-repeat #cfeccf;padding:20px 70px;row-gap:14px}
+#st.pt .bgi{padding:20px 28px}#st.pt .sc{padding-left:28px;padding-right:28px}#st.pt .top{font-size:30px;gap:16px}#st.pt .gr b{font-size:34px}#st.pt .rw>.cd[style*="cursor:default"]{flex:1 1 100%}
+#st.cp .bd{gap:12px}#st.cp .cd{padding:12px 24px}
 #st .bgi .top{height:76px;background:rgba(255,255,255,.93);border-radius:24px;padding:0 30px;position:relative;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 #st .bgi .bd{background:rgba(255,255,255,.92);border-radius:28px;padding:0 20px;box-shadow:0 0 0 10px rgba(255,255,255,.92)}
 #st .bgi .ft{height:92px;position:relative;z-index:1}
@@ -32,10 +34,13 @@ input{user-select:text;-webkit-user-select:text}
 <div id="st"><div id="v"></div><button id="mu" aria-label="Musik">🔊</button><button id="nr" aria-label="Suara penjelasan">🗣️</button><button id="pz" aria-label="Jeda atau lanjutkan penjelasan">⏸️</button></div>
 <script>
 var $=function(i){return document.getElementById(i)},st=$('st'),v=$('v'),S={n:'',as:null,bl:0,bm:0};
-function fit(){st.style.transform='translate(-50%,-50%) scale('+Math.min(innerWidth/1920,innerHeight/1080)+')'}
-addEventListener('resize',fit);fit();
+function fit(){var ae=document.activeElement;if(ae&&ae.tagName=='INPUT')return;
+var vw=window.innerWidth||document.documentElement.clientWidth,vh=window.innerHeight||document.documentElement.clientHeight,a=vw/vh,W,H;
+if(a>=1.1){H=1080;W=Math.max(1400,Math.min(2400,Math.round(1080*a)))}else{W=900;H=Math.min(2400,Math.round(900/a));if(H<1500){H=1500;W=Math.round(1500*a)}}
+st.className=W<H?'pt':(W<1700?'cp':'');st.style.width=W+'px';st.style.height=H+'px';st.style.transform='translate(-50%,-50%) scale('+Math.min(vw/W,vh/H)+')'}
+addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,250)});addEventListener('focusout',function(){setTimeout(fit,250)});fit();
 var bg=new Audio('./assets/musiklatar.mp3'),ok=new Audio('./assets/benar.mp3'),no=new Audio('./assets/salah.mp3'),on=1,sd=0;bg.loop=true;bg.volume=.15;ok.volume=.6;no.volume=.6;
-function sfx(a){try{a.currentTime=0;a.play().catch(function(){})}catch(e){}}
+function sfx(a){try{wa();if(AX&&AX.resume)AX.resume();a.currentTime=0;a.play().catch(function(){})}catch(e){}}
 var DK={s:0,p:0},LT='',SQ=0,PQ=0,nr=1,SP=null;
 function ds(){if(DK.s||DK.p){sd=0;try{bg.pause()}catch(e){}}else music()}
 function stopSpeech(q){SQ++;PQ++;DK.s=0;DK.p=0;SP=null;try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}upd();if(!q)ds()}
@@ -61,8 +66,8 @@ if(p.i>=p.a.length){SP=null;DK.p=0;upd();ds();return}
 if(p.z)return;
 var c=p.a[p.i],u=new SpeechSynthesisUtterance(c.t);u.lang='id-ID';u.rate=c.r;u.pitch=c.p;u.volume=1;
 if(p.v)u.voice=p.v;
-u.onend=function(){if(q==PQ&&SP==p){p.i++;if(p.z&&p.i<p.a.length)p.w=1;else sn()}};
-u.onerror=function(){if(q==PQ&&SP==p){SP=null;DK.p=0;upd();ds()}};
+var dn=0,adv=function(er){if(dn||q!=PQ||SP!=p)return;dn=1;if(er){SP=null;DK.p=0;upd();ds();return}p.i++;if(p.z&&p.i<p.a.length)p.w=1;else sn()};
+u.onend=function(){adv()};u.onerror=function(){adv(1)};setTimeout(function(){adv()},Math.round(c.t.length*150/c.r)+3500);
 try{speechSynthesis.speak(u)}catch(e){SP=null;DK.p=0;upd();ds()}}
 function tp(){var p=SP;if(!p)return;if(p.z){p.z=0;if(p.w){p.w=0;sn()}}else p.z=1;upd()}
 function sfxSay(a,t){stopSpeech(1);var tk=SQ,d=0;LT=t;DK.s=1;ds();sfx(a);
@@ -71,7 +76,11 @@ function rep(){stopSpeech(1);if(!say(LT))ds()}
 function rb(){return'<div style="margin-top:10px"><button class="b g sm" onclick="rep()">🔊 Dengarkan lagi</button></div>'}
 $('pz').onclick=tp;
 $('nr').onclick=function(){nr=!nr;this.textContent=nr?'🗣️':'🤫';if(!nr)stopSpeech()};
-function music(){if(on&&!sd&&!(DK.s||DK.p)){sd=1;try{bg.play().catch(function(e){if(!e||e.name!='AbortError')sd=0})}catch(e){}}}
+var VOK=(function(){try{var a=new Audio();a.volume=.3;return Math.abs(a.volume-.3)<.01}catch(e){return true}})(),AX=null;
+function wa(){if(VOK||AX!==null||!/^https?:/.test(location.protocol))return;AX=0;
+try{var C=window.AudioContext||window.webkitAudioContext;if(!C)return;var c=new C();[[bg,.15],[ok,.6],[no,.6]].forEach(function(x){var g=c.createGain();g.gain.value=x[1];c.createMediaElementSource(x[0]).connect(g);g.connect(c.destination)});if(c.resume)c.resume();AX=c}catch(e){AX=0}}
+document.addEventListener('visibilitychange',function(){if(document.hidden){stopSpeech(1);sd=0;try{bg.pause()}catch(e){}}else music()});
+function music(){wa();if(on&&!sd&&!(DK.s||DK.p)){sd=1;try{bg.play().catch(function(e){if(!e||e.name!='AbortError')sd=0})}catch(e){}}}
 document.addEventListener('pointerdown',music);
 $('mu').onclick=function(){on=!on;this.textContent=on?'🔊':'🔇';if(on){sd=0;music()}else bg.pause()};
 var mem=[];function ld(){try{return JSON.parse(localStorage.getItem('mpiIPA1')||'[]')}catch(e){return mem}}
